@@ -1,0 +1,27 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Sign Up</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <p>
+    Please Enter your full details:
+  </p>
+<form>
+  <ion-input placeholder="First Name"><ion-icon name="person-outline"></ion-icon></ion-input>
+  <ion-input placeholder="Last Name"><ion-icon name="person-outline"></ion-icon></ion-input>
+  <ion-input placeholder="Nationality"><ion-icon name="person-outline"></ion-icon></ion-input>
+  <ion-input placeholder="DOB"><ion-icon name="calendar-outline"></ion-icon></ion-input>
+  <ion-input placeholder="Phone Number"><ion-icon name="call-outline"></ion-icon></ion-input>
+  <ion-input placeholder="Password" type="password"><ion-icon name="key-outline"></ion-icon></ion-input>
+  <ion-input placeholder="Confirm Password" type="password"><ion-icon name="key-outline"></ion-icon></ion-input>
+
+<div class="buttons-wrap">
+  <ion-button expand="full" color="success" (click)="onSignUp()">Save</ion-button>
+  <ion-button expand="full" color="warning">Cancel</ion-button>
+
+</div>
+
+</form>
+</ion-content>

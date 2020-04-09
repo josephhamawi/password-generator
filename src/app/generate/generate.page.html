@@ -1,0 +1,106 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Generate</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+<p>
+  Please choose your generator option :
+</p>
+
+
+<!-- Toggles in a List -->
+ <ion-list>
+  <ion-item >
+    <ion-label>Twitter</ion-label>
+    <ion-icon name="logo-twitter"></ion-icon>
+    <ion-toggle [(ngModel)]="Twitter" checked></ion-toggle>
+  </ion-item>
+  <ion-item >
+    <ion-label>Instagram</ion-label>
+    <ion-icon name="logo-Instagram"></ion-icon>
+    <ion-toggle [(ngModel)]="Instagram" ></ion-toggle>
+  </ion-item>
+  <ion-item >
+    <ion-label>Banking</ion-label>
+    <ion-icon name="cash-outline"></ion-icon>
+    <ion-toggle [(ngModel)]="Banking" ></ion-toggle>
+  </ion-item>
+  <ion-item >
+    <ion-label>Snapchat</ion-label>
+    <ion-icon name="logo-snapchat"></ion-icon>
+    <ion-toggle [(ngModel)]="Snapchat"  ></ion-toggle>
+  </ion-item>
+  <ion-item >
+    <ion-label>Hotmail</ion-label>
+    <ion-icon name="mail-outline"></ion-icon>
+    <ion-toggle [(ngModel)]="Hotmail" ></ion-toggle>
+  </ion-item>
+ 
+  
+  
+ </ion-list>
+
+<!--form>
+   <ion-item >
+    <ion-label>Phone Lock</ion-label>
+    <ion-icon name="lock-closed-outline"></ion-icon>
+    <ion-toggle [(ngModel)]="Phone Lock" ></ion-toggle>
+  </ion-item>
+ <ion-item >
+    <ion-label>Facebook</ion-label>
+    <ion-icon name="logo-facebook"></ion-icon>
+    <ion-toggle [(ngModel)]="Facebook"></ion-toggle>
+  </ion-item>
+  <ion-chip outline='true' color="primary">
+    <ion-icon name="logo-facebook"></ion-icon>
+    <ion-label>Facebook</ion-label>
+  </ion-chip>
+  <ion-chip outline='true' color="primary">
+    <ion-icon name="logo-Instagram"></ion-icon>
+    <ion-label>Instagram</ion-label>
+  </ion-chip>
+  <ion-chip outline='true' color="primary">
+    <ion-icon name="cash-outline"></ion-icon>
+    <ion-label>Banking</ion-label>
+  </ion-chip >
+  <ion-chip outline='true' color="primary">
+    <ion-icon name="logo-twitter"></ion-icon>
+    <ion-label>Twitter</ion-label>
+  </ion-chip>
+  <ion-chip outline='true' color="primary">
+    <ion-icon name="logo-snapchat"></ion-icon>
+    <ion-label>Snapchat</ion-label>
+  </ion-chip>
+  <ion-chip outline='true' color="primary">
+    <ion-icon name="mail-outline"></ion-icon>
+    <ion-label>Hotmail</ion-label>
+  </ion-chip>
+  <ion-chip outline='true' color="primary">
+    <ion-icon name="lock-closed-outline"></ion-icon>
+    <ion-label>Phone Lock</ion-label>
+  </ion-chip>
+</form-->
+<div class="container" >
+  <h3>Password generator</h3>
+    <form>
+      <input id="passwordOutput" #passwordOutput value="{{newPassword}}" />
+      <input type="range" (change)="updatePasswordLength($event)" min="4" max="32" step="1" value="{{passwordLenght}}" />
+      <input type="text" value="{{passwordLenght}}" />
+
+      <div class="flex">
+        <span *ngFor="let checkbox of checkboxes">
+          <input type="checkbox" (change)="updateCheckboxValue($event)" id="{{checkbox.id}}" [checked]="checkbox.checked" />
+          <label for="{{checkbox.id}}">{{checkbox.label}}</label>
+        </span>
+      </div>
+
+      <button type="button" (click)="generatePassword()">{{buttonLabel}}</button>
+    </form>
+</div>
+<div>
+  <!-- <ion-button expand="full" color="success" value='Generate'(click)="Generate">Generate</ion-button> -->
+ </div>
+</ion-content>

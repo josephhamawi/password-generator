@@ -1,0 +1,26 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons>
+      <ion-back-button></ion-back-button>
+    </ion-buttons>
+    <ion-title xpand="full" color="success" >Login</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <img src="" class="logo">
+  <form #loginForm="ngForm" novalidate>
+    <ion-input  name="username" type="text" spellcheck="false"
+          autocapitalize="off" required placeholder="Username">
+      </ion-input>
+    
+
+      <ion-input  name="password" type="password" required placeholder="Password">
+      </ion-input>
+
+      <div>
+        <ion-button color="success" expand="full" (click)="onSignIn()">Login</ion-button>
+      </div>
+
+  </form>
+</ion-content>
