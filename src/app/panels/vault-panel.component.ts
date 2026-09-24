@@ -86,6 +86,9 @@ export class VaultPanelComponent implements OnInit {
     );
     this.busy = false;
     if (!ok) {
+      // Clear it here too: a rejected attempt should not leave the string
+      // sitting in component state and bound to the input.
+      this.masterPassword = '';
       this.error = 'That master password does not match this vault.';
       return;
     }

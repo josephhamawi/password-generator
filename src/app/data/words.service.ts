@@ -18,7 +18,11 @@ export class WordsService {
   words: Wordlist = [];
   loaded = false;
 
-  constructor(private db: DbService, private crypto: VaultCryptoService) { }
+  constructor(private db: DbService, private crypto: VaultCryptoService) {
+    // Locking the vault has to drop the decrypted list too. Without this the
+    // words stayed in memory after "Lock", so the button claimed more than it did.
+    this.crypto.onLock(() => this.lock());
+  }
 
   get stored(): boolean {
     return !!this.db.wordsSealed();

@@ -26,9 +26,22 @@ export interface Sealed {
   cipher: string;
 }
 
+interface KeyPair {
+  key: CryptoKey;
+  macKey: CryptoKey;
+}
+
 @Injectable({ providedIn: 'root' })
 export class VaultCryptoService {
   private key: CryptoKey = null;
+  private macKey: CryptoKey = null;
+
+  /** Called whenever the vault locks, so holders of decrypted data can drop it. */
+  private lockListeners: Array<() => void> = [];
+
+  onLock(fn: () => void): void {
+    this.lockListeners.push(fn);
+  }
 
   get unlocked(): boolean {
     return this.key !== null;
@@ -47,29 +60,33 @@ export class VaultCryptoService {
 
   /** Derives and caches the key. Returns false if the verifier does not match. */
   async unlock(masterPassword: string, saltB64: string, verifier: Sealed): Promise<boolean> {
-    const key = await this.deriveKey(masterPassword, saltB64);
+    const pair = await this.deriveKeys(masterPassword, saltB64);
     if (verifier) {
       try {
-        const plain = await this.openWith(key, verifier);
+        const plain = await this.openWith(pair.key, verifier);
         if (plain !== VERIFIER_PLAINTEXT) { return false; }
       } catch (e) {
         // AES-GCM authentication failure -- wrong master password.
         return false;
       }
     }
-    this.key = key;
+    this.key = pair.key;
+    this.macKey = pair.macKey;
     return true;
   }
 
   async createVerifier(masterPassword: string, saltB64: string): Promise<Sealed> {
-    const key = await this.deriveKey(masterPassword, saltB64);
-    const verifier = await this.sealWith(key, VERIFIER_PLAINTEXT);
-    this.key = key;
+    const pair = await this.deriveKeys(masterPassword, saltB64);
+    const verifier = await this.sealWith(pair.key, VERIFIER_PLAINTEXT);
+    this.key = pair.key;
+    this.macKey = pair.macKey;
     return verifier;
   }
 
   lock(): void {
     this.key = null;
+    this.macKey = null;
+    this.lockListeners.forEach(fn => fn());
   }
 
   async seal(plaintext: string): Promise<Sealed> {
@@ -83,22 +100,38 @@ export class VaultCryptoService {
   }
 
   /**
-   * SHA-256 of the password, used only to spot the same password reused across
-   * platforms. Unsalted on purpose: the point is that identical inputs collide.
-   * It is never a substitute for the encrypted copy.
+   * A keyed fingerprint, used only to spot the same password reused across
+   * platforms.
+   *
+   * This was originally a bare SHA-256 of the password, which was a mistake: an
+   * unsalted fast hash sitting in the same database as the ciphertext hands an
+   * attacker who obtains the file an offline target far cheaper than the
+   * 310,000-round PBKDF2 key, and defeats the encryption for any password weak
+   * enough to appear in a breach list.
+   *
+   * HMAC-SHA256 under a key derived from the master password keeps the property
+   * that matters (identical passwords produce identical values, so duplicates
+   * still collide) while making the stored value useless without the master
+   * password.
    */
   async reuseFingerprint(plaintext: string): Promise<string> {
-    const digest = await window.crypto.subtle.digest('SHA-256', this.encode(plaintext));
-    return this.toBase64(new Uint8Array(digest));
+    if (!this.macKey) { throw new Error('Vault is locked.'); }
+    const mac = await window.crypto.subtle.sign('HMAC', this.macKey, this.encode(plaintext));
+    return this.toBase64(new Uint8Array(mac));
   }
 
   // ------------------------------------------------------------------ internals
 
-  private async deriveKey(masterPassword: string, saltB64: string): Promise<CryptoKey> {
+  /**
+   * One PBKDF2 pass produces 512 bits, split into an AES-GCM encryption key and
+   * a separate HMAC key for fingerprints. Deriving both from one pass keeps the
+   * unlock cost unchanged while keeping the two uses domain-separated.
+   */
+  private async deriveKeys(masterPassword: string, saltB64: string): Promise<KeyPair> {
     const material = await window.crypto.subtle.importKey(
-      'raw', this.encode(masterPassword), 'PBKDF2', false, ['deriveKey']
+      'raw', this.encode(masterPassword), 'PBKDF2', false, ['deriveBits']
     );
-    return window.crypto.subtle.deriveKey(
+    const bits = await window.crypto.subtle.deriveBits(
       {
         name: 'PBKDF2',
         salt: this.fromBase64(saltB64),
@@ -106,10 +139,16 @@ export class VaultCryptoService {
         hash: 'SHA-256'
       },
       material,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
+      512
     );
+    const raw = new Uint8Array(bits);
+    const key = await window.crypto.subtle.importKey(
+      'raw', raw.slice(0, 32), { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+    );
+    const macKey = await window.crypto.subtle.importKey(
+      'raw', raw.slice(32, 64), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+    );
+    return { key, macKey };
   }
 
   private async sealWith(key: CryptoKey, plaintext: string): Promise<Sealed> {
