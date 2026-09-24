@@ -1,0 +1,66 @@
+<h2 class="panel-title">Your words</h2>
+<p class="panel-intro">
+  Between {{ min }} and {{ max }} private words that only you know: letters, digits,
+  symbols, anything. Passwords are built by drawing from this list at random.
+  Unlike your profile, nobody can look these up, so they carry real strength.
+</p>
+
+<div *ngIf="loading" class="empty">Loading&hellip;</div>
+
+<div *ngIf="!loading">
+  <p class="alert alert--warn" *ngIf="!unlocked">
+    The word list is stored encrypted, because it is the secret every generated
+    password leans on. Unlock the vault on the Vault tab to read or change it.
+  </p>
+
+  <div *ngIf="unlocked">
+    <ul class="words">
+      <li class="word" *ngFor="let w of draft; let i = index">
+        <span class="word__n mono">{{ i + 1 }}</span>
+        <input class="input input--mono" type="text" [value]="w"
+               (input)="onInput(i, $event)" autocomplete="off" spellcheck="false"
+               [attr.aria-label]="'Word ' + (i + 1)" placeholder="a word, number or symbol" />
+        <span class="word__bits mono" *ngIf="w && w.trim()"
+              [class.is-weak]="isPlainWord(w)">{{ bitsFor(w) }} bits</span>
+        <button type="button" class="linkbtn" (click)="remove(i)"
+                [attr.aria-label]="'Remove word ' + (i + 1)">&times;</button>
+      </li>
+    </ul>
+
+    <div class="actions-row">
+      <button type="button" class="btn btn--ghost btn--sm" (click)="add()" [disabled]="!canAdd">
+        Add a word
+      </button>
+      <span class="note">{{ filled.length }} of {{ max }} &middot; {{ totalBits }} bits across the list</span>
+    </div>
+
+    <p class="alert alert--warn" *ngIf="error">{{ error }}</p>
+
+    <div class="actions-row">
+      <button type="button" class="btn btn--primary" (click)="save()" [disabled]="!canSave">
+        {{ saved ? 'Saved' : 'Save encrypted' }}
+      </button>
+      <button type="button" class="btn btn--danger btn--sm" (click)="forget()">Forget list</button>
+    </div>
+
+    <section class="advice">
+      <h3 class="eyebrow">What makes a word worth more</h3>
+      <p class="note">
+        A plain lowercase word is capped at dictionary strength no matter how long it
+        is. <code>encyclopedia</code> is one entry in a frequency ordered list, not
+        56 bits of guessing. Mixing case, digits or symbols into a word
+        prices it on its characters instead.
+      </p>
+      <div class="advice__pair">
+        <span class="mono">mountain</span><span class="note">capped at dictionary strength</span>
+      </div>
+      <div class="advice__pair">
+        <span class="mono">M0unt41n!</span><span class="note">priced on its characters, far more</span>
+      </div>
+      <p class="note">
+        Avoid anything guessable from your public life. The Profile tab flags a
+        password that contains your name, city or birth year.
+      </p>
+    </section>
+  </div>
+</div>

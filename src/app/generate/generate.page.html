@@ -1,106 +1,57 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Generate</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-content [fullscreen]="true" scrollY="true">
+  <div class="sheet">
 
-<ion-content>
-
-<p>
-  Please choose your generator option :
-</p>
-
-
-<!-- Toggles in a List -->
- <ion-list>
-  <ion-item >
-    <ion-label>Twitter</ion-label>
-    <ion-icon name="logo-twitter"></ion-icon>
-    <ion-toggle [(ngModel)]="Twitter" checked></ion-toggle>
-  </ion-item>
-  <ion-item >
-    <ion-label>Instagram</ion-label>
-    <ion-icon name="logo-Instagram"></ion-icon>
-    <ion-toggle [(ngModel)]="Instagram" ></ion-toggle>
-  </ion-item>
-  <ion-item >
-    <ion-label>Banking</ion-label>
-    <ion-icon name="cash-outline"></ion-icon>
-    <ion-toggle [(ngModel)]="Banking" ></ion-toggle>
-  </ion-item>
-  <ion-item >
-    <ion-label>Snapchat</ion-label>
-    <ion-icon name="logo-snapchat"></ion-icon>
-    <ion-toggle [(ngModel)]="Snapchat"  ></ion-toggle>
-  </ion-item>
-  <ion-item >
-    <ion-label>Hotmail</ion-label>
-    <ion-icon name="mail-outline"></ion-icon>
-    <ion-toggle [(ngModel)]="Hotmail" ></ion-toggle>
-  </ion-item>
- 
-  
-  
- </ion-list>
-
-<!--form>
-   <ion-item >
-    <ion-label>Phone Lock</ion-label>
-    <ion-icon name="lock-closed-outline"></ion-icon>
-    <ion-toggle [(ngModel)]="Phone Lock" ></ion-toggle>
-  </ion-item>
- <ion-item >
-    <ion-label>Facebook</ion-label>
-    <ion-icon name="logo-facebook"></ion-icon>
-    <ion-toggle [(ngModel)]="Facebook"></ion-toggle>
-  </ion-item>
-  <ion-chip outline='true' color="primary">
-    <ion-icon name="logo-facebook"></ion-icon>
-    <ion-label>Facebook</ion-label>
-  </ion-chip>
-  <ion-chip outline='true' color="primary">
-    <ion-icon name="logo-Instagram"></ion-icon>
-    <ion-label>Instagram</ion-label>
-  </ion-chip>
-  <ion-chip outline='true' color="primary">
-    <ion-icon name="cash-outline"></ion-icon>
-    <ion-label>Banking</ion-label>
-  </ion-chip >
-  <ion-chip outline='true' color="primary">
-    <ion-icon name="logo-twitter"></ion-icon>
-    <ion-label>Twitter</ion-label>
-  </ion-chip>
-  <ion-chip outline='true' color="primary">
-    <ion-icon name="logo-snapchat"></ion-icon>
-    <ion-label>Snapchat</ion-label>
-  </ion-chip>
-  <ion-chip outline='true' color="primary">
-    <ion-icon name="mail-outline"></ion-icon>
-    <ion-label>Hotmail</ion-label>
-  </ion-chip>
-  <ion-chip outline='true' color="primary">
-    <ion-icon name="lock-closed-outline"></ion-icon>
-    <ion-label>Phone Lock</ion-label>
-  </ion-chip>
-</form-->
-<div class="container" >
-  <h3>Password generator</h3>
-    <form>
-      <input id="passwordOutput" #passwordOutput value="{{newPassword}}" />
-      <input type="range" (change)="updatePasswordLength($event)" min="4" max="32" step="1" value="{{passwordLenght}}" />
-      <input type="text" value="{{passwordLenght}}" />
-
-      <div class="flex">
-        <span *ngFor="let checkbox of checkboxes">
-          <input type="checkbox" (change)="updateCheckboxValue($event)" id="{{checkbox.id}}" [checked]="checkbox.checked" />
-          <label for="{{checkbox.id}}">{{checkbox.label}}</label>
-        </span>
+    <header class="masthead">
+      <div class="mark">
+        <span class="mark__glyph" aria-hidden="true">*</span>
+        <span class="mark__name">PassGen</span>
       </div>
 
-      <button type="button" (click)="generatePassword()">{{buttonLabel}}</button>
-    </form>
-</div>
-<div>
-  <!-- <ion-button expand="full" color="success" value='Generate'(click)="Generate">Generate</ion-button> -->
- </div>
+      <div class="theme" role="group" aria-label="Colour theme">
+        <button type="button" class="theme__btn" [class.is-on]="themeChoice === 'light'"
+                [attr.aria-pressed]="themeChoice === 'light'" (click)="setTheme('light')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.4"/><path d="M12 1.6v3M12 19.4v3M1.6 12h3M19.4 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M19.4 4.6l-2.1 2.1M6.7 17.3l-2.1 2.1"/></svg>
+          <span class="sr-only">Light</span>
+        </button>
+        <button type="button" class="theme__btn" [class.is-on]="themeChoice === 'dark'"
+                [attr.aria-pressed]="themeChoice === 'dark'" (click)="setTheme('dark')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.8 8.8 0 0 1 9.4 3.5a8.8 8.8 0 1 0 11.1 11.1z"/></svg>
+          <span class="sr-only">Dark</span>
+        </button>
+        <button type="button" class="theme__btn" [class.is-on]="themeChoice === 'system'"
+                [attr.aria-pressed]="themeChoice === 'system'" (click)="setTheme('system')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.6" y="4" width="18.8" height="12.4" rx="1.4"/><path d="M8.4 20.4h7.2"/></svg>
+          <span class="sr-only">System</span>
+        </button>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button type="button" class="tabs__btn" *ngFor="let t of tabs"
+              role="tab" [attr.aria-selected]="tab === t.id"
+              [class.is-on]="tab === t.id" (click)="select(t.id)">
+        {{ t.label }}
+      </button>
+    </nav>
+
+    <!-- Panels stay mounted and are hidden rather than destroyed. With
+         *ngSwitchCase, stepping over to Specs to check a rule and coming back
+         threw away the generated password and reset the mode. -->
+    <div class="panel">
+      <app-generator-panel [hidden]="tab !== 'generate'"></app-generator-panel>
+      <app-vault-panel     [hidden]="tab !== 'vault'"></app-vault-panel>
+      <app-words-panel     [hidden]="tab !== 'words'"></app-words-panel>
+      <app-profile-panel   [hidden]="tab !== 'profile'"></app-profile-panel>
+      <app-specs-panel     [hidden]="tab !== 'specs'"></app-specs-panel>
+      <app-blog-panel      [hidden]="tab !== 'blog'"></app-blog-panel>
+    </div>
+
+    <footer class="colophon">
+      <span>Offline by design</span>
+      <span class="colophon__rule" aria-hidden="true"></span>
+      <a class="colophon__brand" href="https://kodefoundry.com" target="_blank"
+         rel="noopener">Built with Kode Foundry</a>
+    </footer>
+
+  </div>
 </ion-content>

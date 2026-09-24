@@ -1,0 +1,52 @@
+<!-- index -->
+<div *ngIf="!open">
+  <h2 class="panel-title">Blog</h2>
+  <p class="panel-intro">
+    Notes on password security, written while building this app. Ten posts on
+    entropy, cracking, storage and the awkward gap between what a strength meter
+    says and what an attacker has to do.
+  </p>
+
+  <ul class="posts">
+    <li *ngFor="let p of posts">
+      <button type="button" class="post" (click)="read(p)">
+        <span class="post__meta mono">{{ p.date }} &middot; {{ p.readingMinutes }} min</span>
+        <span class="post__title">{{ p.title }}</span>
+        <span class="post__excerpt">{{ p.excerpt }}</span>
+      </button>
+    </li>
+  </ul>
+
+  <p class="blog-foot">
+    Built by
+    <a [href]="foundryUrl" target="_blank" rel="noopener">Kode Foundry</a>.
+  </p>
+</div>
+
+<!-- reader -->
+<article *ngIf="open" class="article">
+  <button type="button" class="linkbtn article__back" (click)="back()">Back to all posts</button>
+
+  <h2 class="article__title">{{ open.title }}</h2>
+  <p class="article__meta mono">{{ open.date }} &middot; {{ open.readingMinutes }} min read</p>
+
+  <div class="article__body">
+    <ng-container *ngFor="let b of blocks(open)">
+      <h3 *ngIf="b.kind === 'heading'" class="article__h">{{ b.text }}</h3>
+      <p *ngIf="b.kind === 'item'" class="article__item">{{ b.text }}</p>
+      <p *ngIf="b.kind === 'para'">
+        <ng-container *ngIf="b.linkText">{{ b.before }}<a [href]="open.link.href"
+          target="_blank" rel="noopener">{{ b.linkText }}</a>{{ b.after }}</ng-container>
+        <ng-container *ngIf="!b.linkText">{{ b.text }}</ng-container>
+      </p>
+    </ng-container>
+  </div>
+
+  <p class="blog-foot">
+    Written by the team at
+    <a [href]="foundryUrl" target="_blank" rel="noopener">Kode Foundry</a>,
+    who build software that tells the truth about itself.
+  </p>
+
+  <button type="button" class="linkbtn" (click)="back()">Back to all posts</button>
+</article>

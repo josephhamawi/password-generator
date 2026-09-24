@@ -1,0 +1,50 @@
+.search { margin-bottom: 18px; }
+
+.specs { list-style: none; margin: 0; padding: 0; }
+
+.spec {
+  border-top: 1px solid var(--hairline);
+  &.is-editing { background: var(--surface); border-radius: var(--radius); }
+}
+
+.spec__row { display: flex; align-items: flex-start; gap: 12px; padding: 14px 2px; }
+
+.spec__body { flex: 1; min-width: 0; }
+
+.spec__top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+
+.spec__name { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+.spec__rules { font-size: 11.5px; color: var(--ink-soft); margin-bottom: 5px; }
+
+.spec__meta {
+  font-size: 11px; color: var(--ink-muted); margin-top: 6px;
+  display: flex; gap: 10px; flex-wrap: wrap;
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+}
+
+.spec__edit { padding: 16px 14px; }
+
+.reqs { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.req {
+  appearance: none; -webkit-appearance: none; cursor: pointer;
+  font-family: var(--font-mono); font-size: 12px;
+  padding: 7px 12px; border-radius: var(--radius);
+  background: transparent; color: var(--ink-muted);
+  border: 1px solid var(--hairline-firm);
+  transition: all 0.15s ease;
+
+  &:hover { color: var(--ink); }
+  &.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+}
+
+.actions-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px;
+}
+
+@media (max-width: 520px) {
+  :host ::ng-deep .grid-2 { grid-template-columns: 1fr; }
+}

@@ -1,22 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
   <meta charset="utf-8" />
-  <title>Ionic App</title>
+  <title>PassGen, a secure password generator</title>
+  <meta name="description" content="A password generator that runs entirely on your device. Nothing is stored, sent, or logged." />
 
   <base href="/" />
 
-  <meta name="color-scheme" content="light dark" />
-  <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0" />
   <meta name="format-detection" content="telephone=no" />
   <meta name="msapplication-tap-highlight" content="no" />
 
-  <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
+  <link rel="icon" type="image/svg+xml" href="assets/icon/logo.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icon/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icon/icon-180.png" />
+  <meta name="theme-color" content="#F4F1E9" />
 
-  <!-- add to homescreen for ios -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+  <script>
+    // Paint the stored theme before first render so there is no flash of the
+    // wrong palette. Light is the default when nothing has been chosen.
+    (function () {
+      var choice = 'light';
+      try { choice = localStorage.getItem('passgen.theme') || 'light'; } catch (e) { }
+      var resolved = choice;
+      if (choice === 'system') {
+        resolved = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', resolved === 'dark' ? 'dark' : 'light');
+    })();
+  </script>
 </head>
 
 <body>

@@ -1,0 +1,262 @@
+<div *ngIf="loading" class="empty">Opening the local database&hellip;</div>
+
+<div *ngIf="!loading">
+
+  <!-- ------------------------------------------------------------- platform -->
+  <div class="field">
+    <span class="eyebrow">Platform</span>
+
+    <div class="picker">
+      <button type="button" class="picker__trigger" (click)="pickerOpen = !pickerOpen"
+              [attr.aria-expanded]="pickerOpen" aria-haspopup="listbox">
+        <app-brand-logo *ngIf="spec" [slug]="spec.slug" [size]="20"></app-brand-logo>
+        <span class="picker__name">{{ spec ? spec.name : 'No platform, free-form' }}</span>
+        <span class="picker__meta mono" *ngIf="spec">{{ spec.minLength }}–{{ spec.maxLength }}</span>
+        <svg class="picker__caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+
+      <ul class="picker__list" *ngIf="pickerOpen" role="listbox">
+        <li>
+          <button type="button" class="picker__opt" role="option"
+                  [attr.aria-selected]="!spec" (click)="clearPlatform()">
+            <span class="picker__optlogo" aria-hidden="true">&times;</span>
+            <span class="picker__name">No platform, free-form</span>
+          </button>
+        </li>
+        <li *ngFor="let p of platforms">
+          <button type="button" class="picker__opt" role="option"
+                  [attr.aria-selected]="spec && spec.id === p.id" (click)="selectPlatform(p)">
+            <app-brand-logo [slug]="p.slug" [size]="18"></app-brand-logo>
+            <span class="picker__name">{{ p.name }}</span>
+            <span class="picker__meta mono">{{ p.minLength }}–{{ p.maxLength }}</span>
+            <span class="badge badge--warn" *ngIf="p.passwordless">no password</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="specline" *ngIf="spec">
+      <p class="note">{{ spec.notes }}</p>
+      <div class="specline__tags">
+        <span class="badge" [class.badge--warn]="spec.confidence === 'low'">{{ spec.confidence }} confidence</span>
+        <span class="badge" [class.badge--warn]="isStaleSpec(spec)">verified {{ spec.verifiedOn }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ----------------------------------------------------------------- mode -->
+  <div class="field">
+    <span class="eyebrow">Source</span>
+    <div class="modes">
+      <button type="button" class="mode" [class.is-on]="mode === 'random'"
+              [attr.aria-pressed]="mode === 'random'" (click)="setMode('random')">
+        <strong>Random</strong>
+        <em>Drawn from the CSPRNG. Nothing about you.</em>
+      </button>
+      <button type="button" class="mode mode--words" [class.is-on]="mode === 'words'"
+              [attr.aria-pressed]="mode === 'words'" (click)="setMode('words')"
+              [disabled]="!hasWords">
+        <strong>From my words</strong>
+        <em *ngIf="hasWords">Memorable, and private. Nobody can look these up.</em>
+        <em *ngIf="!hasWords">{{ wordsHint }}</em>
+      </button>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------------- readout -->
+  <section class="readout">
+    <div class="readout__bezel">
+      <span class="tick tick--tl" aria-hidden="true"></span>
+      <span class="tick tick--tr" aria-hidden="true"></span>
+      <span class="tick tick--bl" aria-hidden="true"></span>
+      <span class="tick tick--br" aria-hidden="true"></span>
+
+      <output class="cipher" [class.cipher--dense]="glyphs.length > 28" role="status"
+              [attr.aria-label]="password ? 'Generated password, ' + glyphs.length + ' characters' : 'No password'">
+        <span *ngFor="let g of glyphs; let i = index"
+              class="cipher__ch" [ngClass]="'is-' + g.cls"
+              [class.is-personal]="g.personal"
+              [ngStyle]="{'animation-delay': (i * 11) + 'ms'}">{{ g.ch }}</span>
+      </output>
+    </div>
+
+    <ul class="legend" aria-label="Character types in use">
+      <li class="legend__item is-lower" [class.is-off]="!isActive('lower')"><i aria-hidden="true"></i>lower</li>
+      <li class="legend__item is-upper" [class.is-off]="!isActive('upper')"><i aria-hidden="true"></i>upper</li>
+      <li class="legend__item is-digit" [class.is-off]="!isActive('digit')"><i aria-hidden="true"></i>digit</li>
+      <li class="legend__item is-symbol" [class.is-off]="!isActive('symbol')"><i aria-hidden="true"></i>symbol</li>
+      <li class="legend__item is-personal" *ngIf="showsBothFigures"><i aria-hidden="true"></i>from your words</li>
+    </ul>
+
+    <p class="alert" *ngFor="let w of warnings">{{ w }}</p>
+    <p class="alert alert--warn" *ngFor="let p of specProblems">{{ p }}</p>
+    <p class="alert alert--warn" *ngIf="leaks.length">
+      This password contains your {{ leaks.join(', ') }}. Generate another.
+    </p>
+  </section>
+
+  <!-- ---------------------------------------------------------------- gauge -->
+  <section class="gauge">
+    <div class="gauge__head">
+      <h2 class="eyebrow">{{ showsBothFigures ? 'Entropy while your list stays secret' : 'Entropy' }}</h2>
+      <p class="gauge__verdict">{{ strength.label }}</p>
+    </div>
+
+    <div class="gauge__bar" role="meter" [attr.aria-valuenow]="realBits"
+         aria-valuemin="0" aria-valuemax="128"
+         [attr.aria-valuetext]="realBits + ' bits, ' + strength.label">
+      <span *ngFor="let c of meterCells; let i = index" class="gauge__cell"
+            [class.is-lit]="i < litSegments"
+            [ngStyle]="{'transition-delay': (i * 9) + 'ms'}"></span>
+    </div>
+
+    <div class="gauge__foot">
+      <p class="stat"><strong class="stat__value">{{ realBits }}</strong><span class="stat__unit">bits</span></p>
+      <p class="gauge__note">Offline guessing: {{ crackTime }}.</p>
+    </div>
+
+    <div class="reveal" *ngIf="showsBothFigures">
+      <div class="reveal__head">
+        <span class="reveal__strike">If your word list ever leaks</span>
+        <span class="reveal__real">{{ leakedBits }} bits &middot; {{ leakedStrength.label }}</span>
+      </div>
+      <p class="note">
+        Your words are reused across every password this makes, so the list is key
+        material. Someone who obtains it no longer guesses the words, only which
+        ones you picked:
+      </p>
+      <ul class="factors">
+        <li *ngFor="let f of leakedFactors">
+          <span class="factors__label">{{ f.label }}</span>
+          <span class="factors__choices mono">&times;{{ choices(f.choices) }}</span>
+          <span class="factors__bits mono">{{ f.bits | number:'1.1-1' }} bits</span>
+        </li>
+      </ul>
+      <p class="note">
+        That is why the list is stored encrypted under your master password, and why
+        extra random characters still matter.
+      </p>
+    </div>
+
+    <div class="breakdown" *ngIf="showsBothFigures">
+      <h3 class="eyebrow">While it stays secret</h3>
+      <ul class="factors">
+        <li *ngFor="let f of factors">
+          <span class="factors__label">{{ f.label }}</span>
+          <span class="factors__choices mono">&times;{{ choices(f.choices) }}</span>
+          <span class="factors__bits mono">{{ f.bits | number:'1.1-1' }} bits</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- controls -->
+  <section class="controls">
+    <div class="field" *ngIf="mode !== 'words'">
+      <div class="field__head">
+        <label class="eyebrow" for="len">Length</label>
+        <span class="field__value">{{ length }}</span>
+      </div>
+      <input id="len" class="slider" type="range" [min]="minLength" [max]="maxLength"
+             step="1" [value]="length" (input)="onLengthInput($event)"
+             [attr.aria-valuetext]="length + ' characters'" />
+      <p class="note" *ngIf="spec">
+        {{ spec.name }} accepts {{ spec.minLength }} to {{ spec.maxLength }} characters.
+      </p>
+    </div>
+
+    <div class="field" *ngIf="mode === 'words'">
+      <div class="field__head">
+        <label class="eyebrow" for="wc">Words used</label>
+        <span class="field__value">{{ wordCount }}</span>
+      </div>
+      <input id="wc" class="slider" type="range" min="1" [max]="wordCountMax" step="1"
+             [value]="wordCount" (input)="onWordCountInput($event)" />
+      <p class="note">
+        Drawn at random from your list, joined by a separator, then
+        {{ wordDigits }} digits and a {{ tailIsSymbol ? 'symbol' : 'digit' }}.
+      </p>
+    </div>
+
+    <div class="field" *ngIf="mode === 'words'">
+      <div class="field__head">
+        <label class="eyebrow" for="pad">Extra random characters</label>
+        <span class="field__value">{{ personalPadding }}</span>
+      </div>
+      <input id="pad" class="slider" type="range" min="0" max="20" step="1"
+             [value]="personalPadding" (input)="onPaddingInput($event)" />
+      <p class="note">
+        The only part that survives a leaked list. Each one adds real bits to both figures.
+      </p>
+    </div>
+
+    <div class="field">
+      <span class="eyebrow">Character sets</span>
+      <p class="note" *ngIf="mode === 'words'">
+        Turning symbols off swaps the final symbol for a digit; the rest apply only
+        to extra random characters.
+      </p>
+      <div class="chips">
+        <button type="button" class="chip chip--lower" [class.is-on]="useLower"
+                [attr.aria-pressed]="useLower" (click)="toggleSet('lower')">
+          <span class="chip__label mono">a–z</span><span class="chip__hint">Lowercase</span>
+        </button>
+        <button type="button" class="chip chip--upper" [class.is-on]="useUpper"
+                [attr.aria-pressed]="useUpper" (click)="toggleSet('upper')">
+          <span class="chip__label mono">A–Z</span><span class="chip__hint">Uppercase</span>
+        </button>
+        <button type="button" class="chip chip--digit" [class.is-on]="useDigit"
+                [attr.aria-pressed]="useDigit" (click)="toggleSet('digit')">
+          <span class="chip__label mono">0–9</span><span class="chip__hint">Digits</span>
+        </button>
+        <button type="button" class="chip chip--symbol" [class.is-on]="useSymbol"
+                [attr.aria-pressed]="useSymbol" (click)="toggleSet('symbol')">
+          <span class="chip__label mono">!&#64;#</span><span class="chip__hint">Symbols</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="eyebrow">Rules</span>
+      <button type="button" class="switch" [class.is-on]="requireEachSet"
+              [attr.aria-pressed]="requireEachSet"
+              (click)="requireEachSet = !requireEachSet; generate()">
+        <span class="switch__track" aria-hidden="true"><span class="switch__knob"></span></span>
+        <span class="switch__text">
+          <strong>Use every set</strong><em>Guarantee at least one of each selected type</em>
+        </span>
+      </button>
+      <button type="button" class="switch" [class.is-on]="avoidAmbiguous"
+              [attr.aria-pressed]="avoidAmbiguous"
+              (click)="avoidAmbiguous = !avoidAmbiguous; generate()">
+        <span class="switch__track" aria-hidden="true"><span class="switch__knob"></span></span>
+        <span class="switch__text">
+          <strong>Avoid look-alikes</strong><em>Drop <code>l I 1 O 0</code> and friends</em>
+        </span>
+      </button>
+    </div>
+  </section>
+
+  <!-- -------------------------------------------------------------- actions -->
+  <div class="actions">
+    <button type="button" class="btn btn--primary" (click)="generate()">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 3.4V8h-4.6"/></svg>
+      Generate
+    </button>
+    <button type="button" class="btn btn--ghost" [class.is-done]="copied" (click)="copy()"
+            [disabled]="!password">
+      <svg *ngIf="!copied" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11.4" height="11.4" rx="1.6"/><path d="M15 5.6A1.6 1.6 0 0 0 13.4 4H5.2A1.6 1.6 0 0 0 3.6 5.6v8.2A1.6 1.6 0 0 0 5.2 15"/></svg>
+      <svg *ngIf="copied" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.8 9.6 18 19.5 6.6"/></svg>
+      {{ copied ? 'Copied' : 'Copy' }}
+    </button>
+  </div>
+
+  <div class="saverow">
+    <button type="button" class="btn btn--ghost btn--sm" (click)="saveToVault()"
+            [disabled]="!canSave">
+      {{ saved ? 'Saved to vault' : 'Save to vault' }}
+    </button>
+    <span class="note" *ngIf="saveHint">{{ saveHint }}</span>
+  </div>
+
+</div>

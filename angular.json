@@ -39,7 +39,9 @@
                 "input": "src/global.scss"
               }
             ],
-            "scripts": []
+            "scripts": [
+              "src/assets/sql/sql-wasm.js"
+            ]
           },
           "configurations": {
             "production": {
@@ -99,7 +101,9 @@
             "tsConfig": "tsconfig.spec.json",
             "karmaConfig": "karma.conf.js",
             "styles": [],
-            "scripts": [],
+            "scripts": [
+              "src/assets/sql/sql-wasm.js"
+            ],
             "assets": [
               {
                 "glob": "favicon.ico",
@@ -128,7 +132,9 @@
               "tsconfig.spec.json",
               "e2e/tsconfig.json"
             ],
-            "exclude": ["**/node_modules/**"]
+            "exclude": [
+              "**/node_modules/**"
+            ]
           }
         },
         "e2e": {

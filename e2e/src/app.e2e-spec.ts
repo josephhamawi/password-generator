@@ -1,14 +1,14 @@
 import { AppPage } from './app.po';
 
-describe('new App', () => {
+describe('PassGen', () => {
   let page: AppPage;
 
   beforeEach(() => {
     page = new AppPage();
   });
 
-  it('should be blank', () => {
+  it('shows the generator on load', () => {
     page.navigateTo();
-    expect(page.getParagraphText()).toContain('Start with Ionic UI Components');
+    expect(page.getContentText()).toContain('PassGen');
   });
 });

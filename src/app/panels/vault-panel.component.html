@@ -1,0 +1,134 @@
+<h2 class="panel-title">Vault</h2>
+
+<div *ngIf="loading" class="empty">Loading&hellip;</div>
+
+<div *ngIf="!loading">
+
+  <!-- Errors surface in every state; keeping this inside the unlocked section
+       meant a rejected master password failed silently. -->
+  <p class="alert alert--warn" *ngIf="error">{{ error }}</p>
+
+  <p class="alert alert--warn" *ngIf="!cryptoAvailable">
+    Web Crypto is unavailable here, so the vault cannot encrypt anything. Open the app
+    over <code>https</code> or <code>localhost</code>.
+  </p>
+
+  <!-- ------------------------------------------------------------- set up -->
+  <section *ngIf="!hasVault && cryptoAvailable">
+    <p class="panel-intro">
+      Passwords are encrypted with AES-GCM using a key stretched from your master
+      password with PBKDF2 (310,000 rounds). SQLite only ever holds ciphertext.
+      <strong>There is no recovery.</strong> If the master password is lost, so is
+      the vault. That is what makes it worth anything.
+    </p>
+
+    <div class="field">
+      <label class="eyebrow" for="mp1">Master password</label>
+      <input class="input input--mono" id="mp1" type="password" [(ngModel)]="masterPassword"
+             autocomplete="new-password" />
+    </div>
+    <div class="field">
+      <label class="eyebrow" for="mp2">Confirm</label>
+      <input class="input input--mono" id="mp2" type="password" [(ngModel)]="masterConfirm"
+             autocomplete="new-password" />
+    </div>
+
+    <button type="button" class="btn btn--primary" (click)="createVault()" [disabled]="busy">
+      {{ busy ? 'Deriving key…' : 'Create vault' }}
+    </button>
+  </section>
+
+  <!-- ------------------------------------------------------------- unlock -->
+  <section *ngIf="hasVault && !unlocked">
+    <p class="panel-intro">This vault is locked. The key lives only in memory while the tab is open.</p>
+    <div class="field">
+      <label class="eyebrow" for="mpu">Master password</label>
+      <input class="input input--mono" id="mpu" type="password" [(ngModel)]="masterPassword"
+             (input)="onMasterInput()" (keyup.enter)="unlock()"
+             autocomplete="current-password" />
+    </div>
+    <div class="actions-row">
+      <button type="button" class="btn btn--primary" (click)="unlock()" [disabled]="busy">
+        {{ busy ? 'Deriving key…' : 'Unlock' }}
+      </button>
+      <button type="button" class="btn btn--danger btn--sm" (click)="wipe()">Forget vault</button>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------ unlocked -->
+  <section *ngIf="unlocked">
+    <div class="vaulthead">
+      <span class="badge badge--ok">unlocked</span>
+      <button type="button" class="linkbtn" (click)="lock()">Lock</button>
+    </div>
+
+    <p class="alert alert--warn" *ngIf="reuseCount">
+      {{ reuseCount }} stored password{{ reuseCount === 1 ? ' is' : 's are' }} used on more
+      than one platform. Reuse means one breach unlocks several accounts.
+    </p>
+
+    <!-- add -->
+    <div class="card addform">
+      <h3 class="eyebrow">Add a password</h3>
+      <div class="addform__grid">
+        <select class="input" [(ngModel)]="newPlatformId" aria-label="Platform">
+          <option value="">Choose a platform…</option>
+          <option *ngFor="let p of platforms" [value]="p.id">{{ p.name }}</option>
+        </select>
+        <input class="input input--mono" type="text" [(ngModel)]="newPassword"
+               placeholder="The password" autocomplete="off" spellcheck="false" />
+      </div>
+      <input class="input" type="text" [(ngModel)]="newLabel"
+             placeholder="Label (optional), e.g. work account" autocomplete="off" />
+      <div class="actions-row">
+        <button type="button" class="switch switch--inline" [class.is-on]="newIsCurrent"
+                [attr.aria-pressed]="newIsCurrent" (click)="newIsCurrent = !newIsCurrent">
+          <span class="switch__track" aria-hidden="true"><span class="switch__knob"></span></span>
+          <span class="switch__text"><strong>This is the current one</strong></span>
+        </button>
+        <button type="button" class="btn btn--ghost btn--sm" (click)="addEntry()" [disabled]="busy">
+          Store encrypted
+        </button>
+      </div>
+      <p class="note">
+        Old passwords are worth recording, since they reveal reuse, but remember an old
+        password often still opens some other account.
+      </p>
+    </div>
+
+    <!-- list -->
+    <div class="empty" *ngIf="!rows.length">Nothing stored yet.</div>
+
+    <ul class="entries" *ngIf="rows.length">
+      <li *ngFor="let r of rows" class="entry">
+        <app-brand-logo [slug]="r.slug" [size]="20"></app-brand-logo>
+
+        <div class="entry__body">
+          <div class="entry__top">
+            <span class="entry__name">{{ r.platformName }}</span>
+            <span class="badge badge--ok" *ngIf="r.entry.isCurrent">current</span>
+            <span class="badge" *ngIf="!r.entry.isCurrent">old</span>
+            <span class="badge badge--warn" *ngIf="r.reusedOn > 1">reused on {{ r.reusedOn }}</span>
+          </div>
+          <div class="entry__value mono">{{ r.revealed ? r.revealed : '••••••••••••' }}</div>
+          <div class="entry__meta">
+            <span *ngIf="r.entry.label">{{ r.entry.label }} &middot; </span>
+            added {{ shortDate(r.entry.createdAt) }}
+          </div>
+        </div>
+
+        <div class="entry__actions">
+          <button type="button" class="linkbtn" (click)="reveal(r)">{{ r.revealed ? 'Hide' : 'Show' }}</button>
+          <button type="button" class="linkbtn" (click)="copy(r)" [disabled]="!r.revealed">Copy</button>
+          <button type="button" class="linkbtn linkbtn--danger" (click)="remove(r)">Delete</button>
+        </div>
+      </li>
+    </ul>
+
+    <div class="actions-row wipe">
+      <button type="button" class="btn btn--danger btn--sm" (click)="wipe()">Wipe vault</button>
+      <span class="note">Deletes every stored password and the key material. Not reversible.</span>
+    </div>
+  </section>
+
+</div>

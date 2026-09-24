@@ -1,0 +1,46 @@
+<h2 class="panel-title">Profile</h2>
+<p class="panel-intro">
+  These details are used only to flag passwords that leak them. They are stored in
+  the local SQLite database in plain text. They are not secrets in themselves, but
+  together they are the exact input a targeted wordlist is built from. Leave
+  anything blank that you would rather the generator never touch.
+</p>
+
+<div *ngIf="loading" class="empty">Loading&hellip;</div>
+
+<div *ngIf="!loading">
+  <div class="grid-2">
+    <div class="field" *ngFor="let f of fields">
+      <label class="eyebrow" [attr.for]="'pf-' + f.key">{{ f.label }}</label>
+      <input class="input" [attr.id]="'pf-' + f.key" [attr.type]="f.type"
+             [value]="value(f.key)" (input)="onInput(f.key, $event)"
+             autocomplete="off" spellcheck="false" />
+    </div>
+  </div>
+
+  <div class="actions-row">
+    <button type="button" class="btn btn--primary" (click)="save()">
+      {{ saved ? 'Saved' : 'Save profile' }}
+    </button>
+    <button type="button" class="btn btn--danger btn--sm" (click)="clear()">Clear all</button>
+  </div>
+
+  <!-- Make the attack surface concrete rather than abstract -->
+  <section class="surface" *ngIf="tokenCount">
+    <h3 class="eyebrow">What an attacker derives from this</h3>
+    <p class="note">
+      Anyone who can read your public profiles can assemble the same list. Tools like
+      <code>cupp</code> and Mentalist generate it automatically, then permute casing,
+      leet substitutions, separators and years.
+    </p>
+    <div class="surface__tokens">
+      <span class="token" *ngFor="let t of tokens">{{ t }}</span>
+      <span class="token token--num" *ngFor="let n of numbers">{{ n }}</span>
+    </div>
+    <p class="note">
+      {{ tokenCount }} base words &times; 3 capitalisations &times; 2 leet variants
+      &times; 9 separators &times; a handful of years. A few million candidates:
+      minutes of offline guessing, not years.
+    </p>
+  </section>
+</div>

@@ -1,106 +1,53 @@
-import { Router } from '@angular/router';
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 
+import { ThemeService, ThemeChoice } from '../theme.service';
+import { GeneratorPanelComponent } from '../panels/generator-panel.component';
+import { WordsPanelComponent } from '../panels/words-panel.component';
 
+type TabId = 'generate' | 'vault' | 'words' | 'profile' | 'specs' | 'blog';
 
 @Component({
   selector: 'app-generate',
   templateUrl: './generate.page.html',
-  styleUrls: ['./generate.page.scss'],
- 
+  styleUrls: ['./generate.page.scss']
 })
-export class GeneratePage implements OnInit {
-  checkboxes = [
-    {
-      "id": "lowercase",
-      "label": "a-z",
-      "library": "abcdefghijklmnopqrstuvwxyz",
-      "checked": true
-    }, {
-      "id": "uppercase",
-      "label": "A-Z",
-      "library": "ABCDEFGHIJKLMNOPWRSTUVWXYZ",
-      "checked": true
-    }, {
-      "id": "numbers",
-      "label": "0-9",
-      "library": "0123456789",
-      "checked": true
-    }, {
-      "id": "symbols",
-      "label": "!-?",
-      "library": "!@#$%^&*-_=+\\|:;',.\<>/?~",
-      "checked": false
+export class GeneratePage {
+  tab: TabId = 'generate';
+
+  tabs: Array<{ id: TabId; label: string }> = [
+    { id: 'generate', label: 'Generate' },
+    { id: 'vault', label: 'Vault' },
+    { id: 'words', label: 'Words' },
+    { id: 'profile', label: 'Profile' },
+    { id: 'specs', label: 'Specs' },
+    { id: 'blog', label: 'Blog' }
+  ];
+
+  @ViewChild(GeneratorPanelComponent, { static: true })
+  generator: GeneratorPanelComponent;
+
+  @ViewChild(WordsPanelComponent, { static: true })
+  wordsPanel: WordsPanelComponent;
+
+  constructor(private theme: ThemeService) { }
+
+  /**
+   * The generator panel is no longer rebuilt on every tab change, so profile
+   * and spec edits made on the other tabs are pulled in on the way back.
+   */
+  select(id: TabId): void {
+    this.tab = id;
+    if (id === 'words' && this.wordsPanel && !this.wordsPanel.loading) {
+      // The list only decrypts once the vault is open, so re-read on the way in.
+      this.wordsPanel.reload();
     }
-  ]
-
-  dictionary: Array<String>;
-
-  lowercase: Boolean = this.checkboxes[0].checked;
-  uppercase: Boolean = this.checkboxes[1].checked;
-  numbers: Boolean = this.checkboxes[2].checked;
-  symbols: Boolean = this.checkboxes[3].checked;
-
-  passwordLenght: Number = 4;
-  buttonLabel: String = "Generate";
-  newPassword: String;
-
-  constructor(private Route : Router) { }
-
-  ngOnInit() {
-  }
-
-  private updatePasswordLength(event) {
-    this.passwordLenght = event.target.value;
-  }
-
-  private updateCheckboxValue(event) {
-    if (event.target.id == "lowercase")
-      this.lowercase = event.target.checked;
-
-    if (event.target.id == "uppercase")
-      this.uppercase = event.target.checked;
-
-    if (event.target.id == "numbers")
-      this.numbers = event.target.checked;
-
-    if (event.target.id == "symbols")
-      this.symbols = event.target.checked;
-  }
-
-
-  private generatePassword() {
-    if (this.lowercase === false && this.uppercase === false && this.numbers === false && this.symbols === false) {
-      return this.newPassword = "...";
+    if (id === 'generate' && this.generator && !this.generator.loading) {
+      this.generator.refresh();
+      this.generator.generate();
     }
-
-    // Create array from chosen checkboxes
-    this.dictionary = [].concat(
-      this.lowercase ? this.checkboxes[0].library.split("") : [],
-      this.uppercase ? this.checkboxes[1].library.split("") : [],
-      this.numbers ? this.checkboxes[2].library.split("") : [],
-      this.symbols ? this.checkboxes[3].library.split("") : []
-    );
-
-
-    // Generate random password from array
-    var newPassword = "";    for (var i = 0; i < this.passwordLenght; i++) {
-      newPassword += this.dictionary[Math.floor(Math.random() * this.dictionary.length)];
-    }
-    this.newPassword = newPassword;
-
-
-    // Call copy function
-
-    console.log(this.newPassword);
-
-
-
   }
-  // @ViewChild('passwordOutput') password: ElementRef;
-  // private copyPassword() {
-  //   const inputElement = <HTMLInputElement>this.password.nativeElement;
-  //   inputElement.select();
-  //   document.execCommand("copy");
-  // }
+
+  get themeChoice(): ThemeChoice { return this.theme.choice; }
+
+  setTheme(choice: ThemeChoice): void { this.theme.set(choice); }
 }

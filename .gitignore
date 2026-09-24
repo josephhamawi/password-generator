@@ -1,0 +1,22 @@
+# Build output
+/www/
+/dist/
+/out-tsc/
+/.angular/
+
+# Test artifacts
+/coverage/
+/e2e/screenshots/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+
+# NOTE: node_modules is deliberately committed in this repo so the project
+# runs without an install step. It is not ignored here.

@@ -1,0 +1,24 @@
+.actions-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px;
+}
+
+.surface {
+  margin-top: 34px; padding: 16px; border-radius: var(--radius);
+  border: 1px solid var(--danger); background: var(--danger-soft);
+
+  .eyebrow { color: var(--danger); margin-bottom: 8px; }
+}
+
+.surface__tokens { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+
+.token {
+  font-family: var(--font-mono); font-size: 11.5px;
+  padding: 4px 8px; border-radius: 2px;
+  background: var(--surface); border: 1px solid var(--hairline-firm); color: var(--ink-soft);
+
+  &--num { color: var(--cls-digit); }
+}
+
+@media (max-width: 520px) {
+  :host ::ng-deep .grid-2 { grid-template-columns: 1fr; }
+}
